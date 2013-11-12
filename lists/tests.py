@@ -20,6 +20,12 @@ class HomePageTest(TestCase):
 		
 		self.assertEqual(response.content.decode(), expected_html)
 
+	# Test that GETting the home_page view doesn't create a list item
+	def test_home_page_only_saves_items_when_necessary(self):
+		request = HttpRequest()
+		home_page(request)
+		self.assertEqual(Item.objects.all().count(), 0)
+
 	# Test that we get something back when we POST a new list item 
 	def test_home_page_can_save_a_POST_request(self):
 		request = HttpRequest()
@@ -28,13 +34,34 @@ class HomePageTest(TestCase):
 
 		response = home_page(request)
 
-		self.assertIn('A new list item', response.content.decode())
-		# Looks like the django render_to_string function can take a dict of passed form values
-		expected_html = render_to_string(
-			'home.html',
-			{'new_item_text': 'A new list item'}
-		)
-		self.assertEqual(response.content.decode(), expected_html)
+		# Test that the ORM actually persists out new 'Item' object
+		self.assertEqual(Item.objects.all().count(), 1)
+		new_item = Item.objects.all()[0]
+		self.assertEqual(new_item.text, 'A new list item')
+
+	# Test that we get a 302 redirect to '/' in return
+	def test_home_page_redirects_after_POST(self):
+		request = HttpRequest()
+		request.method = 'POST'
+		request.POST['item_text'] = 'A new list item'
+
+		response = home_page(request)
+
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response['location'], '/')
+
+	# Test that our page can displat multiple list items
+	def test_home_page_displays_all_list_items(self):
+		# pump them directly into the database - no need to go through the view
+		Item.objects.create(text='item 1')
+		Item.objects.create(text='item 2')
+
+		request = HttpRequest()
+		response = home_page(request)
+
+		self.assertIn('item 1', response.content.decode())
+		self.assertIn('item 2', response.content.decode())
+
 
 class ItemModelTest(TestCase):
 	def test_saving_and_retrieving_items(self):
