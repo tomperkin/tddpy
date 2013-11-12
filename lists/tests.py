@@ -48,20 +48,26 @@ class HomePageTest(TestCase):
 		response = home_page(request)
 
 		self.assertEqual(response.status_code, 302)
-		self.assertEqual(response['location'], '/')
+		self.assertEqual(response['location'], '/lists/the-only-list-in-the-world/')
 
-	# Test that our page can displat multiple list items
-	def test_home_page_displays_all_list_items(self):
+
+class ListViewTest(TestCase):
+	
+	# Test that the list view uses its own template
+	def test_uses_list_template(self):
+		response = self.client.get('/lists/the-only-list-in-the-world/')
+		self.assertTemplateUsed(response, 'list.html')
+
+	# Test that our page can display multiple list items
+	def test_page_displays_all_list_items(self):
 		# pump them directly into the database - no need to go through the view
 		Item.objects.create(text='item 1')
 		Item.objects.create(text='item 2')
 
-		request = HttpRequest()
-		response = home_page(request)
+		response = self.client.get('/lists/the-only-list-in-the-world/')
 
-		self.assertIn('item 1', response.content.decode())
-		self.assertIn('item 2', response.content.decode())
-
+		self.assertContains(response, 'item 1')
+		self.assertContains(response, 'item 2')
 
 class ItemModelTest(TestCase):
 	def test_saving_and_retrieving_items(self):

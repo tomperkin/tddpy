@@ -54,8 +54,8 @@ class NewVisitorTest(LiveServerTestCase):
 		inputbox.send_keys('Use peacock feathers to make a fly')
 		inputbox.send_keys(Keys.ENTER)
 
-		#import time # DBG
-		#time.sleep(2)
+		import time # DBG
+		time.sleep(2)
 
 		# The page updates again, and now shows both items on her list
 		self.check_for_row_in_list_table('2: Use peacock feathers to make a fly')

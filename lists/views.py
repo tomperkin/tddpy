@@ -7,9 +7,11 @@ def home_page(request):
 	# If it's a POST, then create the new Item
 	if request.method == 'POST':
 		Item.objects.create(text=request.POST['item_text'])
-		return redirect('/')
+		return redirect('/lists/the-only-list-in-the-world/')
 
 	items = Item.objects.all()
-	# can add an optional dictionary of values to the render call, making the stuff 
-	#  available to the template's context 
-	return render(request, 'home.html', {'items': items})
+	return render(request, 'home.html')
+
+def view_list(request):
+	items = Item.objects.all()
+	return render(request, 'list.html', {'items': items})
