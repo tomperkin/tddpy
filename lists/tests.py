@@ -1,11 +1,11 @@
+from django.http import HttpRequest
+from django.template.loader import render_to_string
 from django.core.urlresolvers import resolve 
 from django.test import TestCase
-from django.http import HttpRequest
 
 from lists.views import home_page
 
-from django.template.loader import render_to_string
-from lists.models import Item
+from lists.models import Item, List
 
 class HomePageTest(TestCase):
 	def test_root_url_resolves_to_home_page_view(self): 
@@ -52,33 +52,46 @@ class ListViewTest(TestCase):
 		self.assertTemplateUsed(response, 'list.html')
 
 	# Test that our page can display multiple list items
-	def test_page_displays_all_list_items(self):
+	def test_displays_all_list_items(self):
 		# pump them directly into the database - no need to go through the view
-		Item.objects.create(text='item 1')
-		Item.objects.create(text='item 2')
+		list_ = List.objects.create()
+		Item.objects.create(text='item 1', list=list_)
+		Item.objects.create(text='item 2', list=list_)
 
 		response = self.client.get('/lists/the-only-list-in-the-world/')
 
 		self.assertContains(response, 'item 1')
 		self.assertContains(response, 'item 2')
 
-class ItemModelTest(TestCase):
+class ListAndItemModelTest(TestCase):
 	def test_saving_and_retrieving_items(self):
+		# create and save a new List instance
+		#list_ = List.objects.create()
+		list_ = List()
+		list_.save()
+
 		first_item = Item()
 		first_item.text = 'The first (ever) list item'
+		first_item.list = list_
 		first_item.save()
 		
 		second_item = Item()
 		second_item.text = 'Item the second'
+		second_item.list = list_
 		second_item.save()
 		
+		saved_lists = List.objects.all()
+		self.assertEqual(saved_lists.count(),1)
+		self.assertEqual(saved_lists[0], list_)
+	
 		saved_items = Item.objects.all()
-		
 		self.assertEqual(saved_items.count(), 2)
 		
 		first_saved_item = saved_items[0]
 		second_saved_item = saved_items[1]
 		
 		self.assertEqual(first_saved_item.text, 'The first (ever) list item')
+		self.assertEqual(first_saved_item.list, list_)
 		self.assertEqual(second_saved_item.text, 'Item the second')
+		self.assertEqual(second_saved_item.list, list_)
 
