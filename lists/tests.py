@@ -20,36 +20,29 @@ class HomePageTest(TestCase):
 		
 		self.assertEqual(response.content.decode(), expected_html)
 
-	# Test that GETting the home_page view doesn't create a list item
-	def test_home_page_only_saves_items_when_necessary(self):
-		request = HttpRequest()
-		home_page(request)
-		self.assertEqual(Item.objects.all().count(), 0)
-
+class NewListTest(TestCase):
 	# Test that we get something back when we POST a new list item 
-	def test_home_page_can_save_a_POST_request(self):
-		request = HttpRequest()
-		request.method = 'POST'
-		request.POST['item_text'] = 'A new list item'
-
-		response = home_page(request)
-
+	def test_saving_a_POST_request(self):
+		
+		self.client.post(
+			 '/lists/new',
+			 data={'item_text': 'A new list item'}
+		)
+		
 		# Test that the ORM actually persists out new 'Item' object
 		self.assertEqual(Item.objects.all().count(), 1)
 		new_item = Item.objects.all()[0]
 		self.assertEqual(new_item.text, 'A new list item')
 
 	# Test that we get a 302 redirect to '/' in return
-	def test_home_page_redirects_after_POST(self):
-		request = HttpRequest()
-		request.method = 'POST'
-		request.POST['item_text'] = 'A new list item'
+	def test_redirects_after_POST(self):
+		
+		response = self.client.post(
+			 '/lists/new',
+			 data={'item_text': 'A new list item'}
+		)
 
-		response = home_page(request)
-
-		self.assertEqual(response.status_code, 302)
-		self.assertEqual(response['location'], '/lists/the-only-list-in-the-world/')
-
+		self.assertRedirects(response, '/lists/the-only-list-in-the-world/')
 
 class ListViewTest(TestCase):
 	
