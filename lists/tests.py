@@ -21,20 +21,19 @@ class HomePageTest(TestCase):
 		self.assertEqual(response.content.decode(), expected_html)
 
 class NewListTest(TestCase):
-	# Test that we get something back when we POST a new list item 
+	# Test that the ORM actually persists out new 'Item' object
 	def test_saving_a_POST_request(self):
 		
 		self.client.post(
 			 '/lists/new',
 			 data={'item_text': 'A new list item'}
 		)
-		
-		# Test that the ORM actually persists out new 'Item' object
+				
 		self.assertEqual(Item.objects.all().count(), 1)
 		new_item = Item.objects.all()[0]
 		self.assertEqual(new_item.text, 'A new list item')
 
-	# Test that we get a 302 redirect to '/' in return
+	# Test that we get a 302 redirect to our newly minted list in response to the POST
 	def test_redirects_after_POST(self):
 		
 		response = self.client.post(
@@ -42,31 +41,72 @@ class NewListTest(TestCase):
 			 data={'item_text': 'A new list item'}
 		)
 
-		self.assertRedirects(response, '/lists/the-only-list-in-the-world/')
+		new_list = List.objects.all()[0]
+		self.assertRedirects(response, '/lists/%d/' % (new_list.id,))
+
+class NewItemTest(TestCase):
+	def test_can_save_a_POST_request_to_an_existing_list(self): 
+		other_list = List.objects.create()
+		correct_list = List.objects.create()
+		self.client.post(
+			'/lists/%d/new_item' % (correct_list.id,),
+			data={'item_text': 'A new item for an existing list'}
+		)
+
+		# Does this not rely on test execution order??
+		self.assertEqual(Item.objects.all().count(), 1)
+
+		new_item = Item.objects.all()[0]
+		self.assertEqual(new_item.text, 'A new item for an existing list')
+		self.assertEqual(new_item.list, correct_list)
+
+	def test_redirects_to_list_view(self):
+		other_list = List.objects.create() 
+		correct_list = List.objects.create()
+		response = self.client.post(
+			'/lists/%d/new_item' % (correct_list.id,),
+			data={'item_text': 'A new item for an existing list'}
+		)
+		
+		self.assertRedirects(response, '/lists/%d/' % (correct_list.id,))
+
 
 class ListViewTest(TestCase):
 	
-	# Test that the list view uses its own template
+	# Test that the list view uses its own template in the unique list URL
 	def test_uses_list_template(self):
-		response = self.client.get('/lists/the-only-list-in-the-world/')
+		list_ = List.objects.create()
+		response = self.client.get('/lists/%d/' % (list_.id,))
 		self.assertTemplateUsed(response, 'list.html')
 
-	# Test that our page can display multiple list items
-	def test_displays_all_list_items(self):
+	# Test that we only get items from the correct list
+	def test_displays_only_items_for_that_list(self):
 		# pump them directly into the database - no need to go through the view
-		list_ = List.objects.create()
-		Item.objects.create(text='item 1', list=list_)
-		Item.objects.create(text='item 2', list=list_)
+		correct_list = List.objects.create()
+		Item.objects.create(text='item 1', list=correct_list)
+		Item.objects.create(text='item 2', list=correct_list)
 
-		response = self.client.get('/lists/the-only-list-in-the-world/')
+		other_list = List.objects.create()
+		Item.objects.create(text='other item 1', list=other_list)
+		Item.objects.create(text='other item 2', list=other_list)
+
+		response = self.client.get('/lists/%d/' % (correct_list.id,))
 
 		self.assertContains(response, 'item 1')
 		self.assertContains(response, 'item 2')
+		self.assertNotContains(response, 'other item 1')
+		self.assertNotContains(response, 'other item 2')
+
+	def test_passes_correct_list_to_template(self):
+		other_list = List.objects.create()
+		correct_list = List.objects.create()
+		response = self.client.get('/lists/%d/' % (correct_list.id,))
+		self.assertEqual(response.context['list'], correct_list)
+
 
 class ListAndItemModelTest(TestCase):
 	def test_saving_and_retrieving_items(self):
 		# create and save a new List instance
-		#list_ = List.objects.create()
 		list_ = List()
 		list_.save()
 
