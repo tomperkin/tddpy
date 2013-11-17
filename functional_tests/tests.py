@@ -54,8 +54,8 @@ class NewVisitorTest(LiveServerTestCase):
 		inputbox.send_keys('Use peacock feathers to make a fly')
 		inputbox.send_keys(Keys.ENTER)
 
-		import time # DBG
-		time.sleep(2)
+		#import time # DBG
+		#time.sleep(2)
 
 		# The page updates again, and now shows both items on her list
 		self.check_for_row_in_list_table('2: Use peacock feathers to make a fly')
@@ -89,3 +89,24 @@ class NewVisitorTest(LiveServerTestCase):
 		self.assertIn('Buy milk', page_text)
 
 		# Satisfied, she goes back to sleep
+
+	def test_layout_and_styling(self):
+		# Edith goes to the homepage
+		self.browser.get(self.live_server_url)
+		self.browser.set_window_size(1024,768)
+
+		# She notices that the input box is nicely centered
+		inputbox = self.browser.find_element_by_tag_name('input')
+		self.assertAlmostEqual(
+			inputbox.location['x'] + inputbox.size['width'] /2,
+			512,
+			delta=3
+		)
+
+		# She starts a new list and that's nicely centred as well
+		inputbox.send_keys('testing\n')
+		self.assertAlmostEqual(
+			inputbox.location['x'] + inputbox.size['width'] /2,
+			512,
+			delta=3
+		)
