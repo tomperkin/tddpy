@@ -58,8 +58,6 @@ class NewListTest(TestCase):
 
 
 
-
-
 class ListViewTest(TestCase):
 	
 	# Test that the list view uses its own template in the unique list URL
