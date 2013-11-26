@@ -14,10 +14,10 @@ class NewVisitorTest(FunctionalTest):
 		self.assertIn('To-Do', header_text)
 
 		# She is invited to enter a to-do item straight away
-		inputbox = self.self.get_item_input_box()
+		inputbox = self.get_item_input_box()
 		self.assertEqual(
 			inputbox.get_attribute('placeholder'),
-			'Enter a To-Do item'
+			'Enter a to-do item'
 		)
 
 		# She types "Buy peacock feathers" into a text box (Edith's hobby

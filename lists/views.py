@@ -2,31 +2,33 @@ from django.shortcuts import render
 from django.shortcuts import redirect
 from lists.models import Item, List
 from lists.forms import ItemForm
-from django.core.exceptions import ValidationError
 
 def home_page(request):
 	return render(request, 'home.html', {'form': ItemForm()})
 
+def new_list(request):
+	form = ItemForm(data=request.POST)
+
+	if form.is_valid():
+		list_ = List.objects.create()
+		Item.objects.create(text=request.POST['text'], list=list_)
+		return redirect(list_)
+	else:
+		return render(request, 'home.html', {"form": form})
 
 def view_list(request, list_id):
+
 	list_ = List.objects.get(id=list_id)
-	error = None
+	form = ItemForm()
+
 	if request.method == 'POST':
-		try:
+		form = ItemForm(data=request.POST)
+		if form.is_valid():
 			Item.objects.create(text = request.POST['text'], list=list_)
-			return redirect(list_) # uses get_absolute_url under the covers
-		except ValidationError:
-			error = "You can't have an empty list item"
+			return redirect(list_) # uses get_absolute_url under the covers to work out the URL to redirect to
+	
+	# Failed validation, or a GET
+	return render(request, 'list.html', {'list': list_, 'form': form})
 
 
-	return render(request, 'list.html', {'list': list_, "error": error})
-
-
-def new_list(request):
-	list_ = List.objects.create()
-	try:
-		Item.objects.create(text=request.POST['text'], list=list_)
-	except ValidationError:
-		error_text = "You can't have an empty list item"
-		return render(request, 'home.html', {"error": error_text})
-	return redirect(list_)
+	
