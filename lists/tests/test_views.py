@@ -20,7 +20,7 @@ class NewListTest(TestCase):
 		
 		self.client.post(
 			 '/lists/new',
-			 data={'item_text': 'A new list item'}
+			 data={'text': 'A new list item'}
 		)
 				
 		self.assertEqual(Item.objects.all().count(), 1)
@@ -32,7 +32,7 @@ class NewListTest(TestCase):
 		
 		response = self.client.post(
 			 '/lists/new',
-			 data={'item_text': 'A new list item'}
+			 data={'text': 'A new list item'}
 		)
 
 		new_list = List.objects.all()[0]
@@ -42,7 +42,7 @@ class NewListTest(TestCase):
 	def test_validation_errors_sent_back_to_home_page_template(self):
 		response = self.client.post(
 			'/lists/new',
-			data={'item_text': ''}
+			data={'text': ''}
 		)
 		
 		self.assertEqual(Item.objects.all().count(), 0)
@@ -89,7 +89,7 @@ class ListViewTest(TestCase):
 		correct_list = List.objects.create()
 		self.client.post(
 			'/lists/%d/' % (correct_list.id,),
-			data={'item_text': 'A new item for an existing list'}
+			data={'text': 'A new item for an existing list'}
 		)
 
 		# Does this not rely on test execution order??
@@ -104,7 +104,7 @@ class ListViewTest(TestCase):
 		correct_list = List.objects.create()
 		response = self.client.post(
 			'/lists/%d/' % (correct_list.id,),
-			data={'item_text': 'A new item for an existing list'}
+			data={'text': 'A new item for an existing list'}
 		)
 		
 		self.assertRedirects(response, '/lists/%d/' % (correct_list.id,))
@@ -114,7 +114,7 @@ class ListViewTest(TestCase):
 
 		response = self.client.post(
 			'/lists/%d/' % (myList.id,),
-			data={'item_text': ''}
+			data={'text': ''}
 		)
 		
 		self.assertEqual(Item.objects.all().count(), 0)
