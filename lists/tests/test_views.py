@@ -42,7 +42,8 @@ class NewListTest(TestCase):
 	def test_validation_errors_sent_back_to_home_page_template(self):
 		response = self.client.post('/lists/new', data={'text': ''})
 		
-		self.assertEqual(Item.objects.all().count(), 0) # check nothing was persisted
+		self.assertEqual(List.objects.all().count(), 0) # check no List was persisted
+		self.assertEqual(Item.objects.all().count(), 0) # check no Item was persisted
 		self.assertTemplateUsed(response, 'home.html')
 		self.assertContains(response, escape(EMPTY_LIST_ERROR))
 		self.assertIsInstance(response.context['form'], ItemForm)
@@ -131,6 +132,7 @@ class ListViewTest(TestCase):
 		response = self.post_invalid_input()
 		self.assertIsInstance(response.context['form'], ItemForm)
 		self.assertContains(response, escape(EMPTY_LIST_ERROR))
+
 
 
 
