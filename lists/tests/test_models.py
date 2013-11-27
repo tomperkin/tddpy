@@ -44,3 +44,32 @@ class ListAndItemModelTest(TestCase):
 		list_ = List.objects.create()
 		self.assertEqual(list_.get_absolute_url(), '/lists/%d/' % (list_.id,) )
 
+	def test_cannot_save_duplicate_items(self):
+		list_ = List.objects.create()
+		Item.objects.create(list=list_, text='blah')
+		with self.assertRaises(ValidationError):
+			Item.objects.create(list=list_, text='blah')
+
+	def test_CAN_save_same_item_to_different_lists(self):
+		list1 = List.objects.create()
+		list2 = List.objects.create()
+		Item.objects.create(list=list1, text='blah') 
+		Item.objects.create(list=list2, text='blah') # should not raise
+
+	def test_list_ordering(self):
+		list1 = List.objects.create()
+		item1 = Item.objects.create(list=list1, text='item 1') 
+		item2 = Item.objects.create(list=list1, text='item 2') 
+		item3 = Item.objects.create(list=list1, text='item 3') 
+
+		self.assertEqual(
+			list(Item.objects.all()),
+			[item1, item2, item3]
+		)
+
+	# Test that an Item's str representation is its text
+	def test_string_representation(self):
+		list1 = List.objects.create()
+		item1 = Item.objects.create(list=list1, text='blah blah')
+
+		self.assertEqual(str(item1), item1.text)
