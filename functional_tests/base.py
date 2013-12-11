@@ -5,6 +5,7 @@ import sys
 class FunctionalTest(LiveServerTestCase):
 
 	# Hack the inbuilt stuff to allow us to point the FT suite at a different server
+	# python3 manage.py test functional_tests --liveserver=superlists-staging.ottg.eu
 	@classmethod
 	def setUpClass(cls):
 		for arg in sys.argv:
